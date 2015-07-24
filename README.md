@@ -31,7 +31,7 @@ Your View should contain following : (add to layout file to make it available ac
   shieldsquare_pid = ""
   @shieldsquare_response = Ss2.shieldsquare_ValidateRequest(shieldsquare_userid, shieldsquare_calltype, shieldsquare_pid, request, cookies)
   if @shieldsquare_response["responsecode"]==-1
-    puts "Curl Error - " + shieldsquare_response["reason"] + "<BR>"
+    puts "Curl Error - " + @shieldsquare_response["reason"] + "<BR>"
     puts "Please reach out to ShieldSquare support team for assistance <BR>"
     puts   "Allow the user request"
   end
