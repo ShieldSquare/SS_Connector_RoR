@@ -2,6 +2,9 @@
 
 Rails connector to access shield square bot detection API
 
+## Pre-Requisites
+Ruby version >=2.0 and Rails >= 4.0
+
 ## Installation
 
 Add this line to your application's Gemfile:
