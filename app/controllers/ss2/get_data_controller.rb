@@ -1,6 +1,6 @@
 module Ss2
 	class GetDataController < ApplicationController
-		skip_before_filter :authenticate_user!
+		skip_before_action :authenticate_user!, raise: false
 
 		def create
 			if params['jsonString'] != ""
