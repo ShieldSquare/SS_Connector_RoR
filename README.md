@@ -7,7 +7,7 @@ Rails connector to access shield square bot detection API
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'ss2', :git => "https://github.com/ShieldSquare/SS_Connector_RoR"
+gem 'ss2', :git => "https://github.com/ShieldSquare/SS_Connector_RoR/tree/ShieldSquare_RoR_v2.1"
 ```
 Run the bundle command to install the gem.
 
