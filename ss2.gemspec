@@ -6,8 +6,8 @@ require 'ss2/version'
 Gem::Specification.new do |spec|
   spec.name          = "ss2"
   spec.version       = Ss2::VERSION
-  spec.authors       = ["Saravanaselvan"]
-  spec.email         = ["spsaravanaselvan@gmail.com"]
+  spec.authors       = ["ShieldSquare"]
+  spec.email         = ["support@shieldsquare.com"]
   spec.summary       = %q{Connect with shield square bot detection API}
   spec.description   = %q{Connect with shield square bot detection API}
   spec.homepage      = ""
