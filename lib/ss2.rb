@@ -5,6 +5,7 @@ require 'httparty'
 require 'addressable/uri'
 require 'ipaddr'
 require 'resolv'
+require 'json'
 
 module Ss2
 	class URI::Parser
@@ -53,7 +54,7 @@ module Ss2
 			@__uzma = ""
 			@__uzmb = 0
 			@__uzmc = ""
-			@__uzmd = 0
+			@__uzmd = 0		
 		end
 	end
 
@@ -64,8 +65,8 @@ module Ss2
 	    @pid          = pid
 	    @responsecode = 0
 	    @url          = url
-	    @reason       = ""
-	    @dynamic_JS   = ""
+	    @reason       = ""		
+	    @dynamic_JS   = ""	
 		end
 	end
 
@@ -117,7 +118,7 @@ module Ss2
 	MIN8 = IPAddr.new("0.0.0.0").to_i
 	MAX8 = IPAddr.new("0.255.255.255").to_i
 
-	def self.shieldsquare_ValidateRequest( shieldsquare_username, shieldsquare_calltype, shieldsquare_pid, request, cookies )
+	def self.shieldsquare_ValidateRequest( shieldsquare_username, shieldsquare_calltype, shieldsquare_pid, request, cookies ) 
 		shieldsquare_low  = 10000
 		shieldsquare_high = 99999
 		shieldsquare_a = 1
@@ -135,8 +136,8 @@ module Ss2
 			puts ''
 			puts 'ShieldSquare Timeout cant be greater then 2000 Milli seconds'
 			exit
-		end
-
+		end	
+		
 		if @@_ipaddr == "REMOTE_ADDR" || @@_ipaddr == "auto"
 			$IP_ADDRESS = request.headers["REMOTE_ADDR"]
 		else
@@ -145,7 +146,7 @@ module Ss2
 
 		if $IP_ADDRESS.blank?
 			$IP_ADDRESS = "0.0.0.0"
-		end
+		end 
 
 		if shieldsquare_pid.blank?
 			shieldsquare_pid = shieldsquare_generate_pid @@sid
@@ -161,7 +162,7 @@ module Ss2
 			shieldsquare_uzmc=shieldsquare_uzmc[shieldsquare_e,shieldsquare_uzmc.length-shieldsquare_f]
 			shieldsquare_a = ((shieldsquare_uzmc.to_i-shieldsquare_c)/shieldsquare_b) + shieldsquare_d
 			shieldsquare_uzmc= rand(shieldsquare_low..shieldsquare_high).to_s + (shieldsquare_c+shieldsquare_a*shieldsquare_b).to_s + rand(shieldsquare_low..shieldsquare_high).to_s
-			cookies[:__uzmc] = { :value => shieldsquare_uzmc, :expires => Time.now + 3600*24*365*10}
+			cookies[:__uzmc] = { :value => shieldsquare_uzmc, :expires => Time.now + 3600*24*365*10} 
 			shieldsquare_request.__uzma = cookies["__uzma"]
 			shieldsquare_request.__uzmb = cookies["__uzmb"]
 			shieldsquare_request.__uzmc = shieldsquare_uzmc
@@ -170,26 +171,38 @@ module Ss2
 			shieldsquare_uzma = id.to_i(36).to_s
 			shieldsquare_lastaccesstime = Time.now.to_i
 			shieldsquare_uzmc= rand(shieldsquare_low..shieldsquare_high).to_s + (shieldsquare_c+shieldsquare_a*shieldsquare_b).to_s + rand(shieldsquare_low..shieldsquare_high).to_s
-			cookies[:__uzma] = { :value => shieldsquare_uzma, :expires => Time.now + 3600*24*365*10}
-			cookies[:__uzmb] = { :value => Time.now.to_i.to_s, :expires => Time.now + 3600*24*365*10}
-			cookies[:__uzmc] = { :value => shieldsquare_uzmc, :expires => Time.now + 3600*24*365*10}
+			cookies[:__uzma] = { :value => shieldsquare_uzma, :expires => Time.now + 3600*24*365*10} 
+			cookies[:__uzmb] = { :value => Time.now.to_i.to_s, :expires => Time.now + 3600*24*365*10} 
+			cookies[:__uzmc] = { :value => shieldsquare_uzmc, :expires => Time.now + 3600*24*365*10} 
 			shieldsquare_request.__uzma = shieldsquare_uzma
 			shieldsquare_request.__uzmb = Time.now.to_i
 			shieldsquare_request.__uzmc = shieldsquare_uzmc
 		end
-		cookies[:__uzmd] = { :value => shieldsquare_current_time.to_s, :expires => Time.now + 3600*24*365*10}
+		cookies[:__uzmd] = { :value => shieldsquare_current_time.to_s, :expires => Time.now + 3600*24*365*10} 
 		shieldsquare_request.__uzmd = shieldsquare_current_time.to_s
 		shieldsquare_request.iSplitIP = shieldsquare_isplit_ip shieldsquare_request._zpsbd6, @@ip_index
 		if @@mode == 'Active' && (shieldsquare_calltype != 4 && shieldsquare_calltype != 5)
 			shieldsquare_request._zpsbd0 = true;
-			shieldsquare_request_hash = JSON.parse(shieldsquare_request.to_json)
-			shieldsquare_request_json = get_request_json(request, shieldsquare_request_hash)
-			shieldsquare_response = handle_active_mode(shieldsquare_response, shieldsquare_service_url, shieldsquare_request_json, @@timeout_value)
+			begin
+				shieldsquare_request_hash = JSON.parse(shieldsquare_request.to_json)
+				shieldsquare_request_json = get_request_json(request, shieldsquare_request_hash)
+				shieldsquare_response = handle_active_mode(shieldsquare_response, shieldsquare_service_url, shieldsquare_request_json, @@timeout_value)
+			rescue Exception => e
+				shieldsquare_response.responsecode = SHIELDSQUARE_CODES_ALLOW_EXP
+				shieldsquare_response.reason = "JSON Parse Error"
+				shieldsquare_response
+			end
 		else
 			shieldsquare_request._zpsbd0 = false;
-			shieldsquare_request_hash = JSON.parse(shieldsquare_request.to_json)
-			shieldsquare_request_json = get_request_json(request, shieldsquare_request_hash)
-			shieldsquare_response = handle_monitor_mode(shieldsquare_response, shieldsquare_service_url, shieldsquare_request_json, @@timeout_value, shieldsquare_calltype)
+			begin
+				shieldsquare_request_hash = JSON.parse(shieldsquare_request.to_json)
+				shieldsquare_request_json = get_request_json(request, shieldsquare_request_hash)
+				shieldsquare_response = handle_monitor_mode(shieldsquare_response, shieldsquare_service_url, shieldsquare_request_json, @@timeout_value, shieldsquare_calltype)
+			rescue Exception => e
+				shieldsquare_response.responsecode = SHIELDSQUARE_CODES_ALLOW_EXP
+				shieldsquare_response.reason = "JSON Parse Error"
+				shieldsquare_response
+			end
 		end
 		shieldsquare_response
 	end
@@ -200,9 +213,9 @@ module Ss2
 			shieldsquare_response.responsecode = SHIELDSQUARE_CODES_ALLOW_EXP
 			shieldsquare_response.reason = "Request Timed Out/Server Not Reachable"
 		else
-			shieldsquare_response_from_ss = JSON.parse(shieldsquare_response_from_ss)
-			shieldsquare_response.dynamic_JS = shieldsquare_response_from_ss['dynamic_JS']
-			n = shieldsquare_response_from_ss['ssresp'].to_i
+			parsed_response_data = JSON.parse(shieldsquare_response_from_ss.body)
+			shieldsquare_response.dynamic_JS = parsed_response_data['dynamic_JS']
+			n = parsed_response_data['ssresp'].to_i
 			case n
 			when 0..4
 				shieldsquare_response.responsecode = n
@@ -225,11 +238,11 @@ module Ss2
 				shieldsquare_response.responsecode = SHIELDSQUARE_CODES_ALLOW_EXP
 				shieldsquare_response.reason = "Request Timed Out/Server Not Reachable"
 			else
-				shieldsquare_response_from_ss = JSON.parse(shieldsquare_response_from_ss)
+				parsed_response_data = JSON.parse(shieldsquare_response_from_ss.body)
 				shieldsquare_response.responsecode = SHIELDSQUARE_CODES_ALLOW
-				shieldsquare_response.dynamic_JS = shieldsquare_response_from_ss['dynamic_JS']
+				shieldsquare_response.dynamic_JS = parsed_response_data['dynamic_JS']				
 			end
-		end
+		end		
 
 		shieldsquare_response
 	end
@@ -238,9 +251,9 @@ module Ss2
 		response = nil
 		Thread.new do
 			response = shieldsquare_post_sync url, payload, timeout
-		end
+		end		
 		response
-	end
+	end	
 
 	def self.shieldsquare_post_sync(url, payload, timeout)
 		# Sendind the Data to the ShieldSquare Server
@@ -250,7 +263,7 @@ module Ss2
 			timeout = timeout.to_f / 1000
 		else
 			timeout = 1
-		end
+		end		
 		begin
 			response = HTTParty.post(url.to_s, :body => params,:headers => headers, :timeout => timeout)
 			if response.code != 200
@@ -259,12 +272,12 @@ module Ss2
 		rescue Exception => e
 			response=nil
 		end
-		response
+		response	
 	end
 
 	def self.is_cookie_set(cookie)
 		!cookie.nil? && !cookie.empty?
-	end
+	end	
 
 	def self.get_request_json(request, shieldsquare_request_hash)
 		unless request.headers["REMOTE_ADDR"].blank?
@@ -410,7 +423,7 @@ module Ss2
 			shieldsquare_post_async url, shieldsquare_post_data, @@timeout_value
 		else
 			shieldsquare_post_sync url, shieldsquare_post_data, @@timeout_value
-		end
+		end		
 	end
 
 	def self.shieldsquare_ip_without_port(ip_address)
