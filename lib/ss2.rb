@@ -16,7 +16,7 @@ module Ss2
 	end
 
 	class ShieldsquareRequest
-		attr_accessor :_zpsbd0, :_zpsbd1, :_zpsbd2, :_zpsbd3, :_zpsbd4, :_zpsbd5, :_zpsbd6, :_zpsbd7, :_zpsbd8, :_zpsbd9, :_zpsbda, :__uzma, :__uzmb, :__uzmc, :__uzmd, :iSplitIP
+		attr_accessor :_zpsbd0, :_zpsbd1, :_zpsbd2, :_zpsbd3, :_zpsbd4, :_zpsbd5, :_zpsbd6, :_zpsbd7, :_zpsbd8, :_zpsbd9, :_zpsbda, :__uzma, :__uzmb, :__uzmc, :__uzmd, :iSplitIP, :_zpsbdt
 
 		def initialize(sid, shieldsquare_pid, request, ip_address, shieldsquare_calltype, shieldsquare_username, current_time)
 			@_zpsbd0 = false
@@ -27,11 +27,7 @@ module Ss2
 			else
 				request.headers['HTTP_REFERER']
 			end
-			@_zpsbd4 = if request.headers['REQUEST_URI'].nil? || request.headers['REQUEST_URI'].empty?
-				""
-			else
-				request.headers['REQUEST_URI']
-			end
+			@_zpsbd4 = request.original_url
 			@_zpsbd5 = if request.session_options[:id].nil? || request.session_options[:id].empty?
 				""
 			else
@@ -54,7 +50,8 @@ module Ss2
 			@__uzma = ""
 			@__uzmb = 0
 			@__uzmc = ""
-			@__uzmd = 0		
+			@__uzmd = 0
+			@_zpsbdt = "ror 3.0.0"
 		end
 	end
 
@@ -81,9 +78,11 @@ module Ss2
 	mattr_accessor :domain_ttl
 	mattr_accessor :domain_cache_file
 	mattr_accessor :ip_index
+	mattr_accessor :domain
 
   def self.setup
-    yield self
+	yield self
+	load_domain_ip(@@ss2_domain, "#{@@domain_cache_file}ss_nr_cache")
   end
 
 	#Shieldsquare Codes
@@ -129,6 +128,7 @@ module Ss2
 		shieldsquare_f = 10
 		shieldsquare_service_url = "http://" + get_domain_ip(@@ss2_domain) + "/getRequestData"
 		shieldsquare_current_time = Time.now.to_i
+		shieldsquare_sid = @@sid
 		$IP_ADDRESS = request.remote_ip
 
 		if @@timeout_value > 2000
@@ -148,11 +148,21 @@ module Ss2
 			$IP_ADDRESS = "0.0.0.0"
 		end 
 
-		if shieldsquare_pid.blank?
-			shieldsquare_pid = shieldsquare_generate_pid @@sid
+		if (@@domain != nil)
+			request_url = request.original_url
+			value = get_multisite_data(request_url, @@domain)
+			if (value != nil && value.length == 2 )
+				shieldsquare_sid = value[0]
+				shieldsquare_calltype = value[1].to_i
+			end
 		end
 
-		shieldsquare_request = ShieldsquareRequest.new(@@sid, shieldsquare_pid, request, $IP_ADDRESS, shieldsquare_calltype, shieldsquare_username, shieldsquare_current_time)
+		if shieldsquare_pid.blank?
+			shieldsquare_pid = shieldsquare_generate_pid shieldsquare_sid
+		end
+
+
+		shieldsquare_request = ShieldsquareRequest.new(shieldsquare_sid, shieldsquare_pid, request, $IP_ADDRESS, shieldsquare_calltype, shieldsquare_username, shieldsquare_current_time)
 		shieldsquare_response = ShieldsquareResponse.new(shieldsquare_pid, @@js_url)
 
 		if is_cookie_set(cookies['__uzma']) && is_cookie_set(cookies['__uzmb']) && is_cookie_set(cookies['__uzmc']) && is_cookie_set(cookies['__uzmd'])
@@ -205,6 +215,17 @@ module Ss2
 			end
 		end
 		shieldsquare_response
+	end
+
+	def self.get_multisite_data(request_url, domain)
+		domain.each do | key, value|
+			pattern = Regexp.new(key)
+			pattern_matched = pattern.match(request_url)
+			if  ( pattern_matched != nil )
+				return value
+			end
+		end
+		return nil
 	end
 
 	def self.handle_active_mode(shieldsquare_response, url, payload, timeout)
@@ -391,7 +412,7 @@ module Ss2
 	def self.shieldsquare_generate_pid(shieldsquare_sid)
 		t=microtime
 		dt=t.split(" ")
-		p = @@sid.split("-")
+		p = shieldsquare_sid.split("-")
 		sid_min = p[3].to_i(16)
 		rmstr1=("00000000"+(dt[1].to_i).to_s(16)).split(//).last(4).join("").to_s
 		rmstr2=("0000" + ((dt[0].to_f * 65536).round).to_s(16)).split(//).last(4).join("").to_s

@@ -7,7 +7,7 @@ Rails connector to access shield square bot detection API
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'ss2', :git => 'https://github.com/ShieldSquare/SS_Connector_RoR', :branch => 'ror_rel_v2.1.0'
+gem 'ss2', :git => 'https://github.com/ShieldSquare/SS_Connector_RoR', :branch => 'ror_multisite'
 ```
 Run the bundle command to install the gem.
 
@@ -26,3 +26,8 @@ The generator prompts for the following details to create ss2_config.rb:
 Once the above options are entered ss2_config.rb will be created inside config/initializers folder.
 
 Update your view file with the code to access shield square API and JS snippet
+
+Build Info
+Date: 27/Dec/2018
+Version: 3.0.0
+Major Feature: Added Non-fti multi-site support.
